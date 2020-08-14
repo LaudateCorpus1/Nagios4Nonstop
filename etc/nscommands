@@ -1,0 +1,55 @@
+
+define command {
+    command_name   mycmd_cpuusage
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_cpu_usage.pl -H $HOSTADDRESS$
+}
+
+define command {
+    command_name   mycmd_memfree
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_mem_usage.pl -H $HOSTADDRESS$
+}
+
+define command {
+    command_name   mycmd_iorate
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_io_usage.pl -H $HOSTADDRESS$
+}
+
+define command {
+    command_name   mycmd_ossusage
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_oss_resource_usage.pl -H $HOSTADDRESS$
+}
+
+define command {
+    command_name   mycmd_processcount
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_process_count.pl -H $HOSTADDRESS$
+}
+
+define command {
+    command_name   mycmd_emscount
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_ems_count.pl -H $HOSTADDRESS$
+}
+
+define command {
+    command_name   mycmd_swap
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_swap_usage.pl -H $HOSTADDRESS$
+}
+
+define command {
+    command_name   mycmd_ossbuf
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_oss_buffers_usage.pl -H $HOSTADDRESS$
+}
+
+define command {
+    command_name   mycmd_tmf
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_tmf.pl -H $HOSTADDRESS$
+}
+
+define command {
+    command_name   mycmd_msg_subsys
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_msgsub_sys_usage.pl -H $HOSTADDRESS$
+}
+
+define command {
+    command_name   mycmd_zzsacount
+    command_line   /usr/bin/perl /usr/local/ns/bin/get_ns_zzsa_count.pl -H $HOSTADDRESS$
+}

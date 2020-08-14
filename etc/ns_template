@@ -1,0 +1,160 @@
+define host {
+    use 			    generic-host
+    host_name                       myhostname
+    alias                           NS1
+    address                         MYHOST.IN.RDLABS.HPECORP.NET
+    check_command                   check-host-alive
+    check_interval                  5
+    retry_interval                  1
+    max_check_attempts              5
+    check_period                    24x7
+    retain_nonstatus_information    0
+    contact_groups                  admins
+    notification_interval           300
+    notification_period             24x7
+    notification_options            d,u,r
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     CPU Usage
+    check_command 	    mycmd_cpuusage
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     Free Memory
+    check_command 	    mycmd_memfree
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     IO Rate
+    check_command 	    mycmd_iorate
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     OSS Usage
+    check_command 	    mycmd_ossusage
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     Process Count
+    check_command 	    mycmd_processcount
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     EMS Count
+    check_command 	    mycmd_emscount
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     ZZSA Count
+    check_command 	    mycmd_zzsacount 
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     SWAP
+    check_command 	    mycmd_swap
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     OSS Buffers
+    check_command 	    mycmd_ossbuf
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     TMF Stats
+    check_command 	    mycmd_tmf
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+
+define service {
+    host_name               myhostname
+    use                     generic-service,graphed-service
+    service_description     Message Sub-system Stats
+    check_command 	    mycmd_msg_subsys
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          3
+    check_period            24x7
+    notification_interval   30
+    contact_groups          admins
+}
+

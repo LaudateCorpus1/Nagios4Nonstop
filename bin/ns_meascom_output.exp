@@ -1,0 +1,410 @@
+########################################################################################
+# Copyright 2020 Hewlett Packard Enterprise Development LP. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without modification, are
+# permitted provided that the following conditions are met:
+# 
+#    1. Redistributions of source code must retain the above copyright notice, this list of
+#       conditions and the following disclaimer.
+# 
+#    2. Redistributions in binary form must reproduce the above copyright notice, this list
+#       of conditions and the following disclaimer in the documentation and/or other materials
+#       provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY Hewlett Packard Enterprise Development LP ``AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Hewlett Packard Enterprise Development LP OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# The views and conclusions contained in the software and documentation are those of the
+# authors and should not be interpreted as representing official policies, either expressed
+# or implied, of Hewlett Packard Enterprise Development LP.
+########################################################################################
+
+#######################################################################################
+# This is a an expect script file which copies T9055 required source files to
+# Guardian Volume on Nonstop host and uncompresses them
+# Also runs the tests and copies the required target testlogs back to locahost
+# where the script is running.
+# Needed Services on target host : FTP Server, SSH Server
+# Required Software to run the script : FTP Client, SSH Client, Expect tools
+#
+# How to run : Export TESTMACHINE_ADDR, TESTMACHINE_USERNAME, TESTMACHINE_PASSWORD & TARGET_DISK
+#              as environment variables and just run "expect <this-script-file-name>"
+#
+# Author : Raghavendra G Hegde
+# Date   : 28/October/2016
+# Change Log
+#               0.1 - Initial Version before checkin - Unreviewed
+######################################################################################
+
+#initialization
+set SOURCE_FILES [list FSMT001 FSMT044 FSMT060 FSMT061 ]
+#FSMT023 is not stable - On some machines it just hangs and over loads the CPUs
+
+#set TARGET_MACHINE $env(TESTMACHINE_ADDR)
+#set LOGIN_NAME $env(TESTMACHINE_USERNAME)
+#set LOGIN_PASSWORD $env(TESTMACHINE_PASSWORD)
+#set TARGET_DISK $env(TARGET_VOLUME)
+#set SOURCE_DIRECTORY $env(SOURCE_FILE_DIRECTORY)
+
+##Following to be cleaned up
+set TARGET_MACHINE  BRANDY.IN.RDLABS.HPECORP.NET
+set LOGIN_NAME "super.super"
+set LOGIN_PASSWORD "L1702"
+set TARGET_DISK \$SAS2
+set CONFIGFILE "/usr/local/ns/configdb"
+set cflag 0
+
+set MEASURE_DATA_CAP_FILE "\$SYSTEM.TMP.DATA05"
+set MEASURE_DATA_TXT_FILE "\$SYSTEM.TMP.F5"
+
+set ARG_HOST [lindex $argv 0]
+set cf [open $CONFIGFILE]
+set cflines [split [read $cf] "\n"]
+close $cf
+foreach cfline $cflines {
+   set clines [split $cfline "|"]
+   set TARGET_MACHINE [lindex $clines 0]
+   set LOGIN_NAME [lindex $clines 1]
+   set LOGIN_PASSWORD [lindex $clines 2]
+   if { $TARGET_MACHINE == $ARG_HOST } {
+       puts "arg=$ARG_HOST h=$TARGET_MACHINE u=$LOGIN_NAME p=$LOGIN_PASSWORD"
+       set cflag 1
+       break
+   }
+}
+
+if { ! $cflag } {
+   puts "Host was not found"
+   exit 1
+}
+
+set DEBUG 1
+
+#Some basic checks on the environment variables
+
+if { [string length $TARGET_MACHINE]  <= 1 ||
+     [string length $TARGET_DISK] <= 2  ||
+     [string length $LOGIN_NAME ] <= 2 } {
+   puts "Please enter appropriate value for TARGET_VOLUME, TESTMACHINE_ADDRm TESTMACHINE_USERNAME and TESTMACHINE_PASSWORD\n"
+   exit -1
+}
+
+set TARGET_SUBVOL RHTEST
+set GPROMPT0 ">"
+set GPROMPT "_SCRIPTPROMPT_"
+set timeout 60
+set MAX_TEST_RUN_TIME 900
+set TET_DIRECTORY "/TETSVN/rgh1"
+
+
+if { $DEBUG == 1 } {
+  puts ""
+  puts "TARGET_SUBVOL $TARGET_SUBVOL"
+  puts "TARGET_MACHINE $TARGET_MACHINE"
+  puts "LOGIN_NAME $LOGIN_NAME"
+  puts "LOGIN_PASSWORD $LOGIN_PASSWORD"
+  puts "GPROMPT $GPROMPT"
+  puts "MAX_TEST_RUN_TIME $MAX_TEST_RUN_TIME"
+  puts ""
+}
+
+proc timeout_handler { {timeout 30} {msg "Timedout"} } {
+   puts "\n$msg after $timeout seconds"
+   exit -1
+}
+
+proc exp { { estring ""} {timeout 30} {timeouterr "Timedout" } } {
+   global spawn_id
+   set timeout $timeout
+   expect {
+      $estring {}
+      timeout  {
+           timeout_handler $timeout $timeouterr
+      }
+   }
+}
+
+#treats the expected to be a pattern
+proc expre { { estring ""} {timeout 30} {timeouterr "Timedout" } } {
+   global spawn_id
+   set timeout $timeout
+   expect {
+      -re $estring {}
+      timeout  {
+           timeout_handler $timeout $timeouterr
+      }
+   }
+}
+
+#sends a cmd and expects estring
+proc send_cmd_and_wait { {cmd ""} {estring ""} {timeout 30} {timeouterr "Timedout" } } {
+   global spawn_id
+   set timeout $timeout
+   send "$cmd\r"
+   expect {
+      $estring { }
+      timeout {
+         timeout_handler $timeout $timeouterr
+      }
+   }
+}
+
+#sends a cmd and expects regular expression pattern as in estring
+proc send_cmd_and_waitre { {cmd ""} {estring ""} {timeout 30} {timeouterr "Timedout" } } {
+   global spawn_id
+   set timeout $timeout
+   send "$cmd\r"
+   expect {
+      -re $estring { }
+      timeout {
+         timeout_handler $timeout $timeouterr
+      }
+   }
+}
+
+
+#FIXME - Following function is not truely modular - variables are from global
+proc upload_files args {
+    global TARGET_MACHINE
+    global SOURCE_FILES
+    global LOGIN_PASSWORD
+    global TARGET_DISK
+    global TARGET_SUBVOL
+    global spawn_id
+
+set f [open "../ftpcommands"]
+set cmds [split [read $f] "\n"]
+close $f
+
+    spawn ftp $TARGET_MACHINE
+    expre "Name (.*):" 30 "Timed out while waiting for ftp session Name prompt"
+    send_cmd_and_wait "super.super" "Password:" 30 "Timedout while waiting for Password prompt"
+    send_cmd_and_wait "$LOGIN_PASSWORD" "ftp>" 30 "Timedout while waiting for ftp> prompt"
+    send_cmd_and_wait "quote guardian" "ftp>"
+#    send_cmd_and_wait "lcd $SOURCE_FILE_DIRECTORY" "ftp>"
+    send_cmd_and_wait "cd $TARGET_DISK.$TARGET_SUBVOL" "ftp>"
+    send_cmd_and_wait "bin" "ftp>"
+    send_cmd_and_wait "hash" "ftp>"
+    foreach cmd $cmds {
+       puts $cmd
+       #send_cmd_and_wait "put $sfile $sfile,1729,512" "ftp>"
+       send_cmd_and_wait "$cmd" "ftp>"
+    }
+
+    send_cmd_and_wait "bye" ""
+    exp eof
+    send_user  "\n"
+}
+
+#FIXME - Following function is not truely modular - variables are from global
+#This function is used to download log files in text format
+proc download_log_files args {
+    #spawn ftp breeza.in.rdlabs.hpecorp.net
+    global TARGET_MACHINE
+    global SOURCE_FILES
+    global LOGIN_PASSWORD
+    global TARGET_DISK
+    global TARGET_SUBVOL
+    global spawn_id
+
+    spawn ftp -p $TARGET_MACHINE
+    expre "Name (.*):"
+    send_cmd_and_wait "super.super" "Password:"
+    send_cmd_and_wait "$LOGIN_PASSWORD" "ftp>"
+    send_cmd_and_wait "quote guardian" "ftp>"
+    send_cmd_and_wait "cd $TARGET_DISK.$TARGET_SUBVOL" "ftp>"
+    send_cmd_and_wait "ascii" "ftp>"
+    send_cmd_and_wait "hash" "ftp>"
+    foreach sfile $SOURCE_FILES {
+        send_cmd_and_wait "cd  $TARGET_DISK.$sfile" "ftp>"
+        send_cmd_and_wait "get  PROGLOG PROGLOG_$sfile" "ftp>"
+    }
+    send_cmd_and_wait "bye" ""
+    exp eof
+    send_user  "\n"
+}
+
+#FIXME - Following function is not truely modular - variables are from global
+#This function is used to download log files in text format
+proc upload_log_files_to_OSS args {
+    #spawn ftp breeza.in.rdlabs.hpecorp.net
+    global TARGET_MACHINE
+    global SOURCE_FILES
+    global LOGIN_PASSWORD
+    global TARGET_DISK
+    global TARGET_SUBVOL
+    global TET_DIRECTORY
+    global spawn_id
+
+    spawn ftp -p $TARGET_MACHINE
+    expre "Name (.*):"
+    send_cmd_and_wait "super.super" "Password:"
+    send_cmd_and_wait "$LOGIN_PASSWORD" "ftp>"
+    send_cmd_and_wait "quote oss" "ftp>"
+    send_cmd_and_wait "cd $TET_DIRECTORY " "ftp>"
+    send_cmd_and_wait "ascii" "ftp>"
+    send_cmd_and_wait "prompt" "ftp>"
+    send_cmd_and_wait "hash" "ftp>"
+    foreach sfile $SOURCE_FILES {
+        send_cmd_and_wait "put PROGLOG_$sfile" "ftp>"
+    }
+    send_cmd_and_wait "bye" ""
+    exp eof
+    send_user  "\n"
+}
+
+#FIXME - not fully modular
+proc unpack_on_guardian {hostname {login ""} {passwd ""} } {
+
+    global GPROMPT
+    global TARGET_DISK
+    global TARGET_SUBVOL
+    global SOURCE_FILES
+    global spawn_id
+    spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $login@$hostname "/bin/gtacl"
+    expre "Password:"
+    send_cmd_and_wait "$passwd" "$GPROMPT" 30
+    send_cmd_and_wait "volume $TARGET_DISK.$TARGET_SUBVOL" "$GPROMPT" 30
+    foreach sfile $SOURCE_FILES {
+        puts "\n=====Unpaking the file $sfile onto $TARGET_DISK.$sfile subvolume"
+        send_cmd_and_wait "" "$GPROMPT" 60
+        send_cmd_and_wait "unpak $sfile, *.*.*, vol $TARGET_DISK.$sfile" "$GPROMPT" 120
+    }
+    send_cmd_and_wait "exit" "Are you sure you want to stop this TACL" 60
+    send_cmd_and_wait "yes" ""
+    exp eof
+    puts ""
+}
+
+proc run_9055_tests_on_guardian {hostname {login ""} {passwd ""} } {
+    global GPROMPT
+    global MAX_TEST_RUN_TIME
+    global SOURCE_FILES
+    global TARGET_DISK
+    global spawn_id
+    send_user  "\n\n=====Running the tests "
+    spawn ssh -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no $login@$hostname "gtacl"
+    exp "Password:" 60 "Timed out while waiting for SSH session (Password prompt)"
+    send_cmd_and_wait "$passwd" "$GPROMPT" 60
+    foreach sfile $SOURCE_FILES {
+        send_cmd_and_wait "volume $TARGET_DISK.$sfile" "$GPROMPT"
+        send_cmd_and_wait "load /keep 1/setup" "$GPROMPT"
+        send_cmd_and_wait "runit" "ENTER SELECTION AND HIT RETURN"
+        send_cmd_and_wait "2" "ENTER Y or N then hit RETURN"
+        send_cmd_and_wait "Y" "ENTER the password with the correct case RETURN"
+        send_cmd_and_wait "$passwd" "ENTER Y or N AND HIT RETURN"
+        send_cmd_and_waitre "N" "RUNNING WITH AUDITING .* HIT RETURN"
+        send_cmd_and_waitre "N" "RUNNING NETWORK.*HIT RETURN"
+        send_cmd_and_waitre "N"  "RUNNING Partial.*HIT RETURN"
+        send_cmd_and_wait "N" "ENTER CPU AND HIT RETURN"
+        send_cmd_and_wait "" "ENTER LIBRARY FILENAME AND HIT RETURN"
+        send_cmd_and_waitre "" "RUNNING UNDER ALIEN.*HIT RETURN"
+        send_cmd_and_waitre "N"  "$sfile.*$GPROMPT" $MAX_TEST_RUN_TIME "Timedout while running the tests"
+#break
+    }
+    send_cmd_and_wait "fup copy PROGLOG" "$GPROMPT" 30
+    send_cmd_and_wait  "exit" "Are you sure you want to stop this TACL"
+    send_cmd_and_wait "yes" ""
+    exp eof
+    puts "\nTest completed......"
+}
+
+
+proc get_measure_stats {hostname {login ""} {passwd ""} } {
+
+    global GPROMPT
+    global GPROMPT0
+    global MAX_TEST_RUN_TIME
+    global SOURCE_FILES
+    global TARGET_DISK
+    global spawn_id
+ 
+    global MEASURE_DATA_CAP_FILE
+    global MEASURE_DATA_TXT_FILE
+
+    set MPROMPT "+"
+    send_user  "\n\n=====Running meascom========"
+    spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $login@$hostname "gtacl"
+    exp "Password:" 60 "Timed out while waiting for SSH session (Password prompt)"
+    send_cmd_and_wait "$passwd" "$GPROMPT0" 60
+
+#set new prompt
+    send_cmd_and_wait "#SET  #INFORMAT  TACL" "$GPROMPT0" 60
+    send_cmd_and_wait "setprompt both" "$GPROMPT0" 60
+    send_cmd_and_wait "\[#DEF _prompter MACRO |BODY| ~; #SET #PREFIX $GPROMPT ~; \]" "$GPROMPT" 60
+
+#setup - clean old data if any
+    send_cmd_and_wait  "purge $MEASURE_DATA_CAP_FILE" "$GPROMPT" 30
+    send_cmd_and_wait  "purge $MEASURE_DATA_TXT_FILE" "$GPROMPT" 30
+
+#start meascom
+    send_cmd_and_wait "meascom" "$MPROMPT" 30
+    send_cmd_and_wait "start meassubsys" "$MPROMPT" 30
+    send_cmd_and_wait "add cpu *" "$MPROMPT" 30
+    send_cmd_and_wait "add osscpu *" "$MPROMPT" 30
+    send_cmd_and_wait "start measurement $MEASURE_DATA_CAP_FILE" "$MPROMPT" 30
+    sleep 5
+    send_cmd_and_wait "stop measurement $MEASURE_DATA_CAP_FILE" "$MPROMPT" 30
+    send_cmd_and_wait "list /out $MEASURE_DATA_TXT_FILE/ cpu *" "$MPROMPT" 30
+    send_cmd_and_wait "list /out $MEASURE_DATA_TXT_FILE/ osscpu *" "$MPROMPT" 30
+
+
+#exit from meascom
+    send_cmd_and_wait "exit" "$GPROMPT" 30
+
+    puts "MEASURE_OUTPUT_START::"
+    send_cmd_and_wait "fup copy $MEASURE_DATA_TXT_FILE" "$GPROMPT" 30
+    puts "::MEASURE_OUTPUT_END"
+
+#get running process info
+    puts "PROCESSINFO_START::"
+    send_cmd_and_wait "status *" "$GPROMPT" 30
+    puts "::PROCESSINFO_END"
+
+#get EMS outputs
+    puts "EMSLOG_START::"
+    send_cmd_and_wait "#PUSH TMPSTR" "$GPROMPT" 30
+    send_cmd_and_wait "#PUSH PASTSEC" "$GPROMPT" 30
+    send_cmd_and_wait "#PUSH yr mon dt hr min sec " "$GPROMPT" 30
+    send_cmd_and_wait "#SET PASTSEC 900" "$GPROMPT" 30
+    send_cmd_and_wait "#SETMANY yr mon dt hr min sec, \[#CONTIME \[#COMPUTE \[#TIMESTAMP] - \[#COMPUTE \[PASTSEC] * 100 ] ]] " "$GPROMPT" 30
+    send_cmd_and_wait "#SET TMPSTR \[yr]-\[mon]-\[dt] \[hr]:\[min]:\[sec]" "$GPROMPT" 30
+    send_cmd_and_wait "EMSDIST TYPE PRINTING, COL \$0, TEXTOUT \[#myterm], TIME \[TMPSTR], STOP EOF" "$GPROMPT" 30
+    puts "::EMSLOG_END"
+
+#get tmfcom transaction status 
+    puts "TMFCOM_STATUS_TRANS_START::"
+    send_cmd_and_wait "tmfcom; status trans" "$GPROMPT" 30
+    puts "::TMFCOM_STATUS_TRANS_END"
+
+#get tmfcom status tmf 
+    puts "TMFCOM_STATUS_TMF_START::"
+    send_cmd_and_wait "tmfcom; status tmf" "$GPROMPT" 30
+    puts "::TMFCOM_STATUS_TMF_END"
+
+#get nskcom kmsf status 
+    puts "NSKCOM_STATUS_KMSF_START::"
+    send_cmd_and_wait "nskcom; status kmsf" "$GPROMPT" 30
+    puts "::NSKCOM_STATUS_KMSF_END"
+
+#get ZZSA count
+    puts "ZZSA_COUNTER_START::"
+    send_cmd_and_wait "fup info \$SYSTEM.*.ZZSA*" "$GPROMPT" 30
+    puts "::ZZSA_COUNTER_END"
+
+#exiting from gtacl
+    send_cmd_and_wait  "exit" "Are you sure you want to stop this TACL"
+    send_cmd_and_wait "yes" ""
+    exp eof
+    puts "\nTest completed......"
+
+}
+
+get_measure_stats  $TARGET_MACHINE $LOGIN_NAME $LOGIN_PASSWORD
