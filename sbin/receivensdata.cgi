@@ -98,7 +98,7 @@ if ($btnPressed =~ /Add/ ) {
    my $tout=`cp -f $configtemplate_file $configtemplate_dir/$simple_hostname.cfg 2>&1  `;
    print "cp output |$tout|<br>";
 #updating the hostname details 
-   $tout=`sed -i 's/MYHOST.IN.RDLABS.HPECORP.NET/$host/' $configtemplate_dir/$simple_hostname.cfg 2>&1`;
+   $tout=`sed -i 's/MYHOST.FQDN/$host/' $configtemplate_dir/$simple_hostname.cfg 2>&1`;
    $tout=`sed -i 's/myhostname/$simple_hostname/' $configtemplate_dir/$simple_hostname.cfg 2>&1`;
    print "sed output |$tout|<br>";
    if ($tout !~ /^\s*$/) {
@@ -128,7 +128,7 @@ if ($btnPressed =~ /Add/ ) {
      my $tout=`cp -f $configtemplate_file $configtemplate_dir/$simple_hostname.cfg 2>&1  `;
      print "cp output |$tout|<br>";
 #updating the hostname details 
-     $tout=`sed -i 's/MYHOST.IN.RDLABS.HPECORP.NET/$host/' $configtemplate_dir/$simple_hostname.cfg 2>&1`;
+     $tout=`sed -i 's/MYHOST.FQDN/$host/' $configtemplate_dir/$simple_hostname.cfg 2>&1`;
      $tout=`sed -i 's/myhostname/$simple_hostname/' $configtemplate_dir/$simple_hostname.cfg 2>&1`;
      print "sed output |$tout|<br>";
      if ($tout !~ /^\s*$/) {

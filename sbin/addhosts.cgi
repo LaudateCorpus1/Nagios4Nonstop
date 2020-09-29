@@ -42,12 +42,22 @@ if (scalar @{$params->{db}} == 0) {
 our $buf="
 <form method='post' action='receivensdata.cgi'>
 <INPUT TYPE='hidden' NAME='nagFormId' VALUE='b308ca00'>
+<br><br><br>
+<p style='color:red;font-size:120%;'>
+<B>Note:</B> <br>
+&nbsp;&nbsp;&nbsp;1. The username and credentials are stored as plain text on this system.<br>
+&nbsp;&nbsp;&nbsp;2. These are used to fetch information via SSH.<br>
+&nbsp;&nbsp;&nbsp;3. Passwordless support based on public key for SSH connectivity is not yet available in the current version of this extensions to Nagios.
+<br>
+</p>
 <table CELLSPACING=0 CELLPADDING=5>
 <tr>
+<td> 
+</td>
 </tr>
 <tr>
 <td>Host Name: </td>
-<td><b><INPUT TYPE='TEXT' NAME='host' VALUE='brandy'></b></td>
+<td><b><INPUT TYPE='TEXT' NAME='host' VALUE='myhost.fqdn'></b></td>
 </tr>
 <tr>
 <td>User Name: </td>

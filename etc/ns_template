@@ -2,7 +2,7 @@ define host {
     use 			    generic-host
     host_name                       myhostname
     alias                           NS1
-    address                         MYHOST.IN.RDLABS.HPECORP.NET
+    address                         MYHOST.FQDN
     check_command                   check-host-alive
     check_interval                  5
     retry_interval                  1

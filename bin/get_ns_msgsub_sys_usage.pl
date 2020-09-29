@@ -66,7 +66,6 @@ sub get_number($) {
   return $num;
 }
 
-#$out=`expect /usr/local/ns/ns_meascom_output.exp`;
 $out=`perl ./get_stats.pl -H $hostaddress`;
 
 my $lookup_str="See TOTAL for sum over all initiating CPUs: total data into & from each CPU.";

@@ -54,7 +54,6 @@ our $main_data="";
 my $index=0;
 my $out;
 
-#$out=`expect ./ns_meascom_output.exp`;
 $out=`perl ./get_stats.pl -H $hostaddress`;
 
 my $lookup_str="See TOTAL for sum over all initiating CPUs: total data into & from each CPU.";
@@ -69,7 +68,6 @@ while ($out =~ s/(MEASURE_OUTPUT_START::)(.*?)$lookup_str(.*)(::MEASURE_OUTPUT_E
    if ($buf =~ /Disc-IOs(.*?)Cache-Hits/ ) {
        my $tmp=int($1);
        push (@io_usage,$tmp);
-       #$perf_data.=" cpu${cpu_number}_usage=".$1."MB".";$warning;$critical;";
        $perf_data.=" io_${cpu_number}_rate=".$tmp;
        $main_data.=", IO ${cpu_number} Rate= ".$tmp;
    }

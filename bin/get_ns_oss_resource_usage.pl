@@ -62,7 +62,6 @@ my $ttyopens=0;
 my $pipefopens=0;
 
 $out=`perl ./get_stats.pl -H $hostaddress`;
-#$out=`cat /tmp/t.txt`;
 
 my $lookup_str="------------ OSS Resource --------------------";
 my $i=1;

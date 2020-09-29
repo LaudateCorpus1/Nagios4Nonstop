@@ -56,7 +56,6 @@ my $ems_count=0;
 my $imp_ems_count=0;
 
 $out=`perl ./get_stats.pl -H $hostaddress`;
-#$out=`cat /tmp/t.txt`;
 
 my $lookup_str="------------ OSS Resource --------------------";
 my $i=1;

@@ -74,9 +74,6 @@ ln -f -s $nonstop_plugin_location/bin  /usr/local/ns/bin
 #copy RRD files from the sources
 cp -a $nonstop_plugin_location/rrd /opt/nagiosgraph/var/
 
-#Set time zone
-ln -f -s  /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
-
 #SSH keys - still used by Nonstop (on old systems, so we need to support that), which are disabled in latest dockers
 echo "Host *"  > /opt/nagios/.ssh/config
 echo " HostKeyAlgorithms=+ssh-dss"  >> /opt/nagios/.ssh/config

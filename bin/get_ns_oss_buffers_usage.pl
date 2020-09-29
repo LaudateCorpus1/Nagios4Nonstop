@@ -68,9 +68,7 @@ sub get_in_mb($) {
 }
 
 $out=`perl ./get_stats.pl -H $hostaddress`;
-#$out=`cat /tmp/trh3`;
 
-#my $lookup_str="------------ OSS Resource --------------------";
 my $lookup_str="Dir-Streams";
 my $i=1;
 while ($out =~ s/(MEASURE_OUTPUT_START::)(.*?$lookup_str)(.*)(::MEASURE_OUTPUT_END)/$1$3$4/s ) {

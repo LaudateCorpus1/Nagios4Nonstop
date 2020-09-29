@@ -57,7 +57,6 @@ my $gp_count=0;
 my $op_count=0;
 
 $out=`perl ./get_stats.pl -H $hostaddress`;
-#$out=`cat /tmp/t.txt`;
 
 my $lookup_str="------------ OSS Resource --------------------";
 my $i=1;
@@ -72,7 +71,6 @@ if ($out =~ /(PROCESSINFO_START::)(.*)(::PROCESSINFO_END)/s ) {
        } else {
            $gp_count++;
        }
-       #print "p=$gp_count, op=$op_count, $b\n";
      }
    }
 }

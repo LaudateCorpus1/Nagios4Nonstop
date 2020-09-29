@@ -28,7 +28,6 @@
 @processes_per_cpu=( '$ZLS', '$ZPP',  '$ZRA', '$ZFM', '$ZSP', '$ZTA', '$ZTT'   );
 @processes_per_system=('$ZPNS', '$ZPMON');
 
-#@processes=( '$ZLS' );
 $perf_data="";
 
 $data=join('',<STDIN>);
@@ -41,13 +40,10 @@ foreach $process (@processes_per_cpu) {
     while ($data =~ s/(.*)(Process[\d\s,]*?\($pat.*?PrivStack)(.*$)/$1$3/s ) {
       $flag=1;
       $data2 = $2;
-#print "++++++++++++++\nflag=$flag\n$data2\n+++++++++\n";
       $num=99;
       $num=$1 if ($data2 =~ /Process.*?$pat(\d\d)/);
       $this_process=$process."$num";
-#print "this process=$this_process\n";
       $value=0;
-      #if ($data2 =~ /Heap32(.{32})/) {
       if ($data2 =~ /Cpu-Busy-Time(.{20})/) {
           $tmpv=$1;
           $value=$1 if ($tmpv=~ /(\d+\.{0,1}\d*)/);
@@ -69,9 +65,7 @@ foreach $process (@processes_per_system) {
     while ($data =~ s/(.*)(Process[\d,\s]*?\($pat.*?PrivStack)(.*$)/$1$3/s ) {
       $flag=1;
       $data2 = $2;
-#print "++++++++++++++\npat=|$pat|\nflag=$flag\nprocess=$process\n$data2\n+++++++++\n";
       $this_process=$process;
-#print "this process=$this_process\n";
       $value=0;
       #if ($data2 =~ /Heap32(.{32})/) {
       if ($data2 =~ /Cpu-Busy-Time(.{20})/) {
@@ -81,10 +75,8 @@ foreach $process (@processes_per_system) {
       $perf_data.="${this_process}_cpu_busy_time=$value ";
     } 
 
-#print "flag=$flag, process=$process\n";
     if (!$flag) {
        print STDERR "Some thing went wrong, Could not find Heap32 for process $process\n";
-#print "+++On ERROR+++++++++++\nflag=$flag\ndata=$data\n+++++++++\n";
     }
 }
 

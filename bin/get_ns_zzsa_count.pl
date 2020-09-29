@@ -27,7 +27,6 @@
 ########################################################################################
 
 ###############################################################################
-# Author : Raghavendra G Hegde (raghavendra.g.hegde@hpe.com)
 # Purpose :
 #         This scripts runs a command on Nonstop to get the count of ZZSA files
 #         on the $SYSTEM.* volume. This will be counter that reflects total

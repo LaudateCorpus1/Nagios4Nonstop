@@ -37,7 +37,6 @@
 # How to run : Export TESTMACHINE_ADDR, TESTMACHINE_USERNAME, TESTMACHINE_PASSWORD & TARGET_DISK
 #              as environment variables and just run "expect <this-script-file-name>"
 #
-# Author : Raghavendra G Hegde
 # Date   : 28/October/2016
 # Change Log
 #               0.1 - Initial Version before checkin - Unreviewed
@@ -47,14 +46,8 @@
 set SOURCE_FILES [list FSMT001 FSMT044 FSMT060 FSMT061 ]
 #FSMT023 is not stable - On some machines it just hangs and over loads the CPUs
 
-#set TARGET_MACHINE $env(TESTMACHINE_ADDR)
-#set LOGIN_NAME $env(TESTMACHINE_USERNAME)
-#set LOGIN_PASSWORD $env(TESTMACHINE_PASSWORD)
-#set TARGET_DISK $env(TARGET_VOLUME)
-#set SOURCE_DIRECTORY $env(SOURCE_FILE_DIRECTORY)
-
 ##Following to be cleaned up
-set TARGET_MACHINE  BRANDY.IN.RDLABS.HPECORP.NET
+set TARGET_MACHINE  MYHOST.FQDN
 set LOGIN_NAME "super.super"
 set LOGIN_PASSWORD "L1702"
 set TARGET_DISK \$SAS2
@@ -188,7 +181,6 @@ close $f
     send_cmd_and_wait "super.super" "Password:" 30 "Timedout while waiting for Password prompt"
     send_cmd_and_wait "$LOGIN_PASSWORD" "ftp>" 30 "Timedout while waiting for ftp> prompt"
     send_cmd_and_wait "quote guardian" "ftp>"
-#    send_cmd_and_wait "lcd $SOURCE_FILE_DIRECTORY" "ftp>"
     send_cmd_and_wait "cd $TARGET_DISK.$TARGET_SUBVOL" "ftp>"
     send_cmd_and_wait "bin" "ftp>"
     send_cmd_and_wait "hash" "ftp>"
@@ -206,7 +198,6 @@ close $f
 #FIXME - Following function is not truely modular - variables are from global
 #This function is used to download log files in text format
 proc download_log_files args {
-    #spawn ftp breeza.in.rdlabs.hpecorp.net
     global TARGET_MACHINE
     global SOURCE_FILES
     global LOGIN_PASSWORD
@@ -234,7 +225,6 @@ proc download_log_files args {
 #FIXME - Following function is not truely modular - variables are from global
 #This function is used to download log files in text format
 proc upload_log_files_to_OSS args {
-    #spawn ftp breeza.in.rdlabs.hpecorp.net
     global TARGET_MACHINE
     global SOURCE_FILES
     global LOGIN_PASSWORD
@@ -307,7 +297,6 @@ proc run_9055_tests_on_guardian {hostname {login ""} {passwd ""} } {
         send_cmd_and_wait "" "ENTER LIBRARY FILENAME AND HIT RETURN"
         send_cmd_and_waitre "" "RUNNING UNDER ALIEN.*HIT RETURN"
         send_cmd_and_waitre "N"  "$sfile.*$GPROMPT" $MAX_TEST_RUN_TIME "Timedout while running the tests"
-#break
     }
     send_cmd_and_wait "fup copy PROGLOG" "$GPROMPT" 30
     send_cmd_and_wait  "exit" "Are you sure you want to stop this TACL"

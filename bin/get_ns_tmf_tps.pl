@@ -54,8 +54,6 @@ our $main_data="";
 my $index=0;
 my $out;
 
-#$out=`expect /usr/local/ns/ns_meascom_output.exp`;
-#$out=`perl /usr/local/ns/get_stats.pl -H $hostaddress`;
 $out=`perl ./get_stats.pl -H $hostaddress`;
 
 my ($total_swap,$reserved_pages,$available_pages);
@@ -63,7 +61,6 @@ my $lookup_str="Transaction Rate:";
 while ( $out =~ s/(TMFCOM_STATUS_TMF_START::.*)$lookup_str(.*)(::TMFCOM_STATUS_TMF_END)/$1$3/s ){
 
    my $buf=$2;
-#   if ( $buf =~ /(.*?)([0-9]+\.[0-9]+)\s*TPS/s ){
    if ( $buf =~ /(.*?)(\d+)\s*TPS/s ){
 	   my $t=$1; #This is TPS
 	   print "t value = ".$t."\n";
@@ -71,21 +68,6 @@ while ( $out =~ s/(TMFCOM_STATUS_TMF_START::.*)$lookup_str(.*)(::TMFCOM_STATUS_T
 	   $perf_data.="TPS= ".$t;
 	   $main_data.="Transaction Rate = ".$t." TPS";
    }
-
-=head not required
-   if ($buf =~ /Total\s*swap\s*space\s*(\d+\.\d+)/ ) {
-			   $perf_data.=" CPU${cpu_number}_total_swap_space=".$1."GB";
-			   $main_data.=", SWAP${cpu_number} Total = ".$1."GB";
-			   $total_swap=$1;
-   }
-=cut
-
-#   if ($buf =~ /Transaction\s*Rate:\s*(\d+)/ ) {
-#                           my $t=$1; #This is TPS
-#                           $t = sprintf("%.3f",$t) ; #This will convert to GB
-#			   $perf_data.="TPS=".$t;
-#			   $main_data.="Transaction Rate = ".$t."TPS";
-#   }
 }
 $perf_data =~ s/^,//;
 $perf_data =~ s/^\s+//;

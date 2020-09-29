@@ -79,12 +79,9 @@ if ($hostaddress =~ /^\s*$/) {
    exit -1;
 }
 
-#my $target_file="/usr/local/ns/_tmp_$hostaddress.txt";
 my $target_file="/tmp/_tmp_$hostaddress.txt";
 
 #check if the target file exists and file modified in last 5 minutes
-#stat -c "%Y" tmp.txt
-#date +%s
 my $t=`date +%s;echo ":";stat -c "%Y" $target_file;`;
 my ($t1, $t2, $time_diff);
 if ($t =~ /(\d+)\s*:\s*(\d+)/s) {

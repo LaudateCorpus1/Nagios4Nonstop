@@ -54,7 +54,6 @@ our $main_data="";
 my $index=0;
 my $out;
 
-#$out=`expect /usr/local/ns/ns_meascom_output.exp`;
 $out=`perl ./get_stats.pl -H $hostaddress`;
 
 my $lookup_str="See TOTAL for sum over all initiating CPUs: total data into & from each CPU.";
@@ -65,10 +64,8 @@ while ($out =~ s/(MEASURE_OUTPUT_START::)(.*?)$lookup_str(.*)(::MEASURE_OUTPUT_E
    if ($buf =~ /Cpu\s*(\d+)/) {
        $cpu_number=int($1);
    }
-#  if ($buf =~ /Cpu-Busy-Time\s*(\d*\.\d*)/ ) {
    if ($buf =~ /Cpu-Busy-Time\s*(\d*\.?\d*)/ ) {
        push (@cpu_usage,int($1));
-#       $perf_data.=" cpu${cpu_number}_usage=".$1."%".";$warning;$critical;";
        $perf_data.=" cpu${cpu_number}_usage=".$1."%"."";
        $main_data.=", CPU${cpu_number} Usage = ".int($1)."%";
    }

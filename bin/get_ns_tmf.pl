@@ -54,7 +54,6 @@ our $main_data="";
 my $index=0;
 my $out;
 
-#$out=`expect /usr/local/ns/ns_meascom_output.exp`;
 $out=`perl ./get_stats.pl -H $hostaddress`;
 
 my ($total_swap,$reserved_pages,$available_pages);

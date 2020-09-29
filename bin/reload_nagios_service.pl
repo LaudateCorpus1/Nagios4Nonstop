@@ -54,8 +54,6 @@ $result = GetOptions(
 my $target_file="/opt/nonstop_extensions/etc/nsservers";
 
 #check if the target file exists and file modified in last 5 minutes
-#stat -c "%Y" tmp.txt
-#date +%s
 my $t=`cat /tmp/reloadtime;echo ":";stat -c "%Y" $target_file;`;
 my ($t1, $t2, $time_diff);
 if ($t =~ /(\d+)\s*:\s*(\d+)/s) {

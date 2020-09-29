@@ -54,7 +54,6 @@ our $main_data="";
 my $index=0;
 my $out;
 
-#$out=`expect /usr/local/ns/ns_meascom_output.exp`;
 $out=`perl ./get_stats.pl -H $hostaddress`;
 
 my ($total_swap,$reserved_pages,$available_pages);
@@ -66,14 +65,6 @@ while ( $out =~ s/(NSKCOM_STATUS_KMSF_START::.*)$lookup_str(.*)(::NSKCOM_STATUS_
    if ( $buf =~ /(.*?)CPU\s*(\d+)/s ){
                    $cpu_number=int($2);
    }
-
-=head not required
-   if ($buf =~ /Total\s*swap\s*space\s*(\d+\.\d+)/ ) {
-			   $perf_data.=" CPU${cpu_number}_total_swap_space=".$1."GB";
-			   $main_data.=", SWAP${cpu_number} Total = ".$1."GB";
-			   $total_swap=$1;
-   }
-=cut
 
    if ($buf =~ /Reserved\s*CPU\s*Pages\s*(\d+)/ ) {
                            my $t=$1; #This is number of pages - each 16K size
